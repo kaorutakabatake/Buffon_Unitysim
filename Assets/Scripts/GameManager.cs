@@ -161,9 +161,5 @@ public class GameManager : MonoBehaviour
                 "　　　　　誤差は　" + MathF.Abs(MathF.PI - yourPiEstimate)
             );
         }
-        // else
-        // {
-        //     Debug.Log("No needles crossed the lines.");
-        // }
     }
 }

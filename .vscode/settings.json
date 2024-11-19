@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "ビュフォンの針.sln"
+    "dotnet.defaultSolution": "Buffon needle.sln"
 }
