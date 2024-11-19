@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UI;
 
 
 public class GameManager : MonoBehaviour
@@ -27,17 +24,25 @@ public class GameManager : MonoBehaviour
     private float TIME_ATTACK_LIMIT = 12;
     public float limitTime;
     public bool isCountDown = false;
-    private bool isThrowNeedle = true;
+    public bool isThrowNeedle = true;
     private GameObject resetNeedleObject;
     public GameObject timeAttackBottun;
     private GameObject timeBack;
-    private string[] ranking_user_name = new string[10];
-    private long[] ranking_number_of_throws = new long[10];
-    private long[] ranking_needles_crossed = new long[10];
+    private int RANKING_USER_NUM = 20;//ランキングのユーザー数
+    public string[] ranking_user_name;//ランキングのユーザー名
+    private float[] ranking_user_score;//ランキングのユーザースコア(誤差)
     private StreamReader sr;
+    public GameObject rankingPanel;//ランキングパネル全体のオブジェクト
+    public TMP_Text rankingText;//結果画面のランキング表示用
+    public TMP_Text userScoreText;//結果画面のユーザースコア表示用
+    public TMP_Text enterNameText;//結果画面の名前入力用
+    public int ranking;//ユーザーのランキング
+    public bool isResult = false;
 
     void Start()
     {
+        ranking_user_name = new string[RANKING_USER_NUM];
+        ranking_user_score = new float[RANKING_USER_NUM];
         limitTime = TIME_ATTACK_LIMIT;
         topCamera = GameObject.Find("TopCamera");
         sideCamera = GameObject.Find("SideCamera");
@@ -49,6 +54,8 @@ public class GameManager : MonoBehaviour
             "　　　　　誤差は...　"
         );
 
+        rankingPanel = GameObject.Find("RankingPanel");//ランキングパネルを取得
+        rankingPanel.SetActive(false);//ランキングパネルを非表示に
 
         timeText.SetText("");
         startText.SetText("");
@@ -58,15 +65,18 @@ public class GameManager : MonoBehaviour
         timeBack.SetActive(false);
 
         // ファイルから総投擲数、総横切り数、ランキングデータを読み込む
+        // ファイルには1行目に総投擲数と総横切り数、2行目以降にランキングデータ(14人分)が保存されている
+        //ランキングデータは「順位:名前:誤差」の形式で保存されている
         sr = new StreamReader("Assets/SaveData/file_save.txt");
+        //1行目のデータを読み込む
         string[] needle_data_tmp =  sr.ReadLine().Split(":");
         numberOfThrows = long.Parse(needle_data_tmp[0]);
         needlesCrossed = long.Parse(needle_data_tmp[1]);
-        for(int i = 0; i < 10; i++){
+        //2行目以降のデータを読み込む
+        for(int i = 0; i < RANKING_USER_NUM; i++){
             string[] ranking_data_tmp =  sr.ReadLine().Split(":");
             ranking_user_name[i] = ranking_data_tmp[1];//名前
-            ranking_number_of_throws[i] = long.Parse(ranking_data_tmp[2]);//投擲数
-            ranking_needles_crossed[i] = long.Parse(ranking_data_tmp[3]);//横切り数
+            ranking_user_score[i] = float.Parse(ranking_data_tmp[2]);//スコア
         }
         sr.Close();
 
@@ -95,13 +105,24 @@ public class GameManager : MonoBehaviour
         if(isCountDown){
             limitTime -= Time.deltaTime;
             if(limitTime < 0){//タイムアウト
-                resetNeedleObject.SetActive(true);//針をリセットボタンを有効化
-                timeAttackBottun.SetActive(true);//タイムアタックボタンを有効化
+                // resetNeedleObject.SetActive(true);//針をリセットボタンを有効化
+                // timeAttackBottun.SetActive(true);//タイムアタックボタンを有効化
+                isResult = true;
+                rankingPanel.SetActive(true);//ランキングパネルを有効化
                 timeBack.SetActive(false);//時間制限の背景を無効化
                 isCountDown = false;//カウントダウン中か否かのフラグをfalseに
                 isThrowNeedle = false;//針を投げられるか否かのフラグをfalseに
                 timeText.SetText("");
                 limitTime = TIME_ATTACK_LIMIT;//制限時間を初期化
+                userScoreText.SetText(//ランキングパネルのやつ
+                    "投げた総数は：" + yourNumberOfThrows + "\n" +
+                    "交わった針は：" + yourNeedlesCrossed + "\n" +
+                    "あなたの円周率は：" + 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f) + "\n" +
+                    "誤差は：" + MathF.Abs(MathF.PI - 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f))
+                );
+                ranking = setRankingData("YOU!", MathF.Abs(MathF.PI - 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f)));//ランキングデータを更新
+                setRankingText();
+
             } else if(limitTime < 10){//タイムアタックゲーム中
                 startText.SetText("");
                 timeText.SetText("残り時間：" + limitTime.ToString("F0"));
@@ -123,8 +144,8 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        //Eを押した時針を投入
-        if(Input.GetKeyDown(KeyCode.E)){
+        //Eを押した時カメラマンを切り替え
+        if(Input.GetKeyDown(KeyCode.E) && isResult == false){
             if(isTopCamera){
                 topCamera.SetActive(false);
                 sideCamera.SetActive(true);
@@ -138,14 +159,7 @@ public class GameManager : MonoBehaviour
 
         if(saveCount > 1000){//10000本ごとにセーブ
             Debug.Log("save!");
-            string tmp = numberOfThrows.ToString()+ ":" + needlesCrossed.ToString();
-            for(int i = 0; i < 10; i++){
-                tmp = tmp + "\n" + i.ToString() + ":" + ranking_user_name[i] + ":" + ranking_number_of_throws[i] + ":" + ranking_needles_crossed[i];
-            }
-            StreamWriter sw = new StreamWriter("Assets/SaveData/file_save.txt", false);
-            sw.WriteLine(tmp);
-            sw.Flush();
-            sw.Close();
+            SaveData();
             saveCount = 0;
         }
 
@@ -161,5 +175,42 @@ public class GameManager : MonoBehaviour
                 "　　　　　誤差は　" + MathF.Abs(MathF.PI - yourPiEstimate)
             );
         }
+    }
+
+    void setRankingText(){
+        string tmp = "";
+        for(int i = 0; i < RANKING_USER_NUM; i++){
+            tmp = tmp + (i + 1).ToString() + "位：" + ranking_user_name[i] + "　　" + ranking_user_score[i].ToString() + "\n";
+        }
+        rankingText.SetText(tmp);
+    }
+
+    int setRankingData(string user_name, float user_score){//ランキングデータを更新 スコアは小さいものが上位 返値は順位
+        int rank = RANKING_USER_NUM + 1; // 初期値は最下位+1
+        for(int i = 0; i < RANKING_USER_NUM; i++){
+            if(user_score < ranking_user_score[i]){
+                rank = i;
+                for(int j = RANKING_USER_NUM - 1; j > i; j--){
+                    ranking_user_name[j] = ranking_user_name[j - 1];
+                    ranking_user_score[j] = ranking_user_score[j - 1];
+                }
+                ranking_user_name[i] = user_name;
+                ranking_user_score[i] = user_score;
+                break;
+            }
+        }
+        return rank + 1; // 順位は1から始まるようにする
+    }
+
+    public void SaveData(){
+        string tmp = numberOfThrows.ToString()+ ":" + needlesCrossed.ToString();//1行目に総投擲数と総横切り数を保存
+        //2行目以降にランキングデータを保存
+        for(int i = 0; i < RANKING_USER_NUM; i++){
+            tmp = tmp + "\n" + i.ToString() + ":" + ranking_user_name[i] + ":" + ranking_user_score[i].ToString();
+        }
+        StreamWriter sw = new StreamWriter("Assets/SaveData/file_save.txt", false);
+        sw.WriteLine(tmp);
+        sw.Flush();
+        sw.Close();
     }
 }
