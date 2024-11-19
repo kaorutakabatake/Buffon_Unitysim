@@ -29,7 +29,7 @@ public class TimeAttackResult : MonoBehaviour
         string tmp = GameObject.Find("MainCanvas/TimeAttackCanvas/RankingPanel/Username").GetComponent<TMP_InputField>().text;
         if (tmp != "" && tmp != "名前を入力してください"){
             // ランキングのユーザー名とスコアを更新
-            gameManagerScript.ranking_user_name[gameManagerScript.ranking - 1] = gameManagerScript.enterNameText.text; // 配列は0から始まるため-1
+            gameManagerScript.ranking_user_name[gameManagerScript.ranking - 1] = tmp; // 配列は0から始まるため-1
             GameObject.Find("MainCanvas/TimeAttackCanvas/RankingPanel/Username").GetComponent<TMP_InputField>().text = "";
             gameManagerScript.rankingPanel.SetActive(false);
             gameManagerScript.timeAttackBottun.SetActive(true);

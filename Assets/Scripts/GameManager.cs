@@ -21,11 +21,10 @@ public class GameManager : MonoBehaviour
     public TMP_Text gameInfoText;
     public TMP_Text timeText;
     public TMP_Text startText;
-    private float TIME_ATTACK_LIMIT = 12;
+    private float TIME_ATTACK_LIMIT = 13;//11~1がゲーム中
     public float limitTime;
     public bool isCountDown = false;
     public bool isThrowNeedle = true;
-    private GameObject resetNeedleObject;
     public GameObject timeAttackBottun;
     private GameObject timeBack;
     private int RANKING_USER_NUM = 20;//ランキングのユーザー数
@@ -35,9 +34,11 @@ public class GameManager : MonoBehaviour
     public GameObject rankingPanel;//ランキングパネル全体のオブジェクト
     public TMP_Text rankingText;//結果画面のランキング表示用
     public TMP_Text userScoreText;//結果画面のユーザースコア表示用
-    public TMP_Text enterNameText;//結果画面の名前入力用
+    // public TMP_Text enterNameText;//結果画面の名前入力用
     public int ranking;//ユーザーのランキング
     public bool isResult = false;
+    public GameObject resisterButton;
+    public GameObject usernameObject;
 
     void Start()
     {
@@ -60,7 +61,6 @@ public class GameManager : MonoBehaviour
         timeText.SetText("");
         startText.SetText("");
         startText.color = Color.red;
-        resetNeedleObject = GameObject.Find("ResetNeedle");
         timeBack = GameObject.Find("TimeBack");//時間制限の背景
         timeBack.SetActive(false);
 
@@ -121,14 +121,23 @@ public class GameManager : MonoBehaviour
                     "誤差は：" + MathF.Abs(MathF.PI - 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f))
                 );
                 ranking = setRankingData("YOU!", MathF.Abs(MathF.PI - 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f)));//ランキングデータを更新
+                if(ranking <= RANKING_USER_NUM){
+                    resisterButton.SetActive(true);
+                    usernameObject.SetActive(true);
+                } else {
+                    resisterButton.SetActive(false);
+                    usernameObject.SetActive(false);
+                }
                 setRankingText();
 
-            } else if(limitTime < 10){//タイムアタックゲーム中
+            } else if(limitTime < 1){
+                isThrowNeedle = false;//針を投げられるか否かのフラグをfalseに
+            } else if(limitTime < 11){//タイムアタックゲーム中
                 startText.SetText("");
-                timeText.SetText("残り時間：" + limitTime.ToString("F0"));
+                timeText.SetText("残り時間：" + (limitTime - 1).ToString("F0"));//1秒で終わるので調整
                 timeBack.SetActive(true);//時間制限の背景を有効化
                 isThrowNeedle = true;
-            } else if(limitTime < 11){
+            } else if(limitTime < 12){
                 startText.SetText("スタート！");
             } else {
                 timeAttackBottun.SetActive(false);
