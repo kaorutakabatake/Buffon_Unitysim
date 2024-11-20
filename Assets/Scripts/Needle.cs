@@ -37,7 +37,7 @@ public class Needle : MonoBehaviour
         }
     }
 
-    int putOutArea(GameObject Cube){
+    int putOutArea(GameObject Cube){//オブジェクトがどの線の間にあるかを返す
         float zPos = Cube.transform.position.z;
         for(int i = 0; i < numberOfLines - 1; i++){
             if(lineZpos[i] < zPos && zPos < lineZpos[i + 1]){

@@ -35,11 +35,5 @@ public class LineManager : MonoBehaviour
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));  // デフォルトのマテリアルを設定
         lineRenderer.startColor = Color.black;
         lineRenderer.endColor = Color.black;
-
-        // // BoxColliderを追加して線に物理的な判定を持たせる
-        // BoxCollider collider = newLine.AddComponent<BoxCollider>();
-        // collider.size = new Vector3(20, 0.1f, 0.1f);  // 線の長さと同じようにコライダーを設定
-        // collider.center = new Vector3(0, 0, zPos);
-        // collider.isTrigger = false;  // 衝突判定のためにTriggerにする
     }
 }

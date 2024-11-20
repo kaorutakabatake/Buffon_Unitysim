@@ -121,7 +121,7 @@ public class GameManager : MonoBehaviour
                     "誤差は：" + MathF.Abs(MathF.PI - 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f))
                 );
                 ranking = setRankingData("YOU!", MathF.Abs(MathF.PI - 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f)));//ランキングデータを更新
-                if(ranking <= RANKING_USER_NUM){
+                if(ranking <= RANKING_USER_NUM){//ユーザがランキング圏内の場合、登録ボタンを有効化
                     resisterButton.SetActive(true);
                     usernameObject.SetActive(true);
                 } else {
@@ -174,8 +174,8 @@ public class GameManager : MonoBehaviour
 
         // // 針が線を横切った数を基にπを計算
         if (needlesCrossed > 0){
-            float piEstimate = 2.0f * 2.0f * numberOfThrows / (needlesCrossed * 2.0f);
-            float yourPiEstimate = 2.0f * 2.0f * yourNumberOfThrows / (yourNeedlesCrossed * 2.0f);
+            float piEstimate = culcPie(numberOfThrows, needlesCrossed);
+            float yourPiEstimate = culcPie(yourNumberOfThrows, yourNeedlesCrossed);
             gameInfoText.SetText(
                 "　　　　円周率は　" + MathF.PI + "\n" +
                 "今までの円周率は　" + piEstimate + "\n" +
@@ -186,7 +186,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void setRankingText(){
+    float culcPie(long throws, long crossed){
+        return 2.0f * 2.0f * throws / (crossed * 2.0f);
+    }
+    void setRankingText(){//ランキングテキストを作成（スクロールの中のやつ）
         string tmp = "";
         for(int i = 0; i < RANKING_USER_NUM; i++){
             tmp = tmp + (i + 1).ToString() + "位：" + ranking_user_name[i] + "　　" + ranking_user_score[i].ToString() + "\n";
